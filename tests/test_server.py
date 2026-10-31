@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from fastmcp.exceptions import ToolError
 
-from mcp_server_demo import (
+from file_manager import (
     create_file,
     delete_file,
     mcp,
@@ -323,8 +323,8 @@ def test_sandbox_security(test_dir: Path, monkeypatch):
     outside_dir = test_dir / "outside"
     outside_dir.mkdir()
 
-    monkeypatch.setattr("mcp_server_demo.config.WORKSPACE_DIR", sandbox_dir)
-    monkeypatch.setattr("mcp_server_demo.config.ENFORCE_SANDBOX", True)
+    monkeypatch.setattr("file_manager.config.WORKSPACE_DIR", sandbox_dir)
+    monkeypatch.setattr("file_manager.config.ENFORCE_SANDBOX", True)
 
     # File inside sandbox should succeed
     inside_file = sandbox_dir / "safe.txt"

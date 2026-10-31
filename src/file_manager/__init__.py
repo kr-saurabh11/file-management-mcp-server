@@ -11,8 +11,8 @@ server offering secure and flexible file management operations:
 - `main`: Entrypoint to launch the server over standard I/O (stdio).
 """
 
-from mcp_server_demo.config import ENFORCE_SANDBOX, WORKSPACE_DIR, resolve_path
-from mcp_server_demo.server import (
+from file_manager.config import ENFORCE_SANDBOX, WORKSPACE_DIR, resolve_path
+from file_manager.server import (
     create_file,
     delete_file,
     main,

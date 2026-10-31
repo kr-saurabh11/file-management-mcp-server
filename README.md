@@ -9,11 +9,11 @@ A Model Context Protocol (MCP) server built with **FastMCP** that provides stand
 This project follows the modern Python `src` layout convention recommended for robust packaging, clean separation of concerns, and reliable dependency management:
 
 ```
-mcp-server-demo/
+file-management-mcp-server/
 ├── src/
-│   └── mcp_server_demo/
+│   └── file_manager/
 │       ├── __init__.py               # Package exports & version
-│       ├── __main__.py               # Support for `python -m mcp_server_demo`
+│       ├── __main__.py               # Support for `python -m file_manager`
 │       ├── config.py                 # Workspace path & sandbox security resolution
 │       ├── server.py                 # FastMCP server instance & tool registration
 │       └── tools/
@@ -103,7 +103,7 @@ Writes or edits content in a file. Supports overwriting, appending, or targeted 
 ### 1. Clone & Navigate to Repository
 ```bash
 git clone <repo-url>
-cd mcp-server-demo
+cd file-management-mcp-server
 ```
 
 ### 2. Install Dependencies
@@ -129,29 +129,29 @@ You can run, inspect, and test the server locally using several convenient metho
 ### Method 1: Package CLI Command
 Run the registered console script via `uv`:
 ```bash
-uv run mcp-server-demo
+uv run file-management-mcp-server
 ```
 
 ### Method 2: Python Module Invocation
 Run directly using Python's module flag:
 ```bash
-uv run python -m mcp_server_demo
+uv run python -m file_manager
 ```
 
 ### Method 3: FastMCP CLI
 Run the server using the `fastmcp` command-line runner:
 ```bash
-uv run fastmcp run src/mcp_server_demo/server.py
+uv run fastmcp run src/file_manager/server.py
 ```
 
 ### Method 4: Inspect Tool Schemas
 Inspect the registered tools and their MCP parameter schemas:
 ```bash
 # Display summary of all registered tools
-uv run fastmcp list src/mcp_server_demo/server.py
+uv run fastmcp list src/file_manager/server.py
 
 # Output complete JSON schema adhering to MCP protocol specification
-uv run fastmcp inspect src/mcp_server_demo/server.py --format mcp
+uv run fastmcp inspect src/file_manager/server.py --format mcp
 ```
 
 ### Method 5: Test Tool Execution via CLI (`fastmcp call`)
@@ -159,25 +159,25 @@ FastMCP allows calling tools directly from the terminal without an LLM:
 
 ```bash
 # 1. Create a file
-uv run fastmcp call src/mcp_server_demo/server.py create_file path=notes.txt content="Initial notes"
+uv run fastmcp call src/file_manager/server.py create_file path=notes.txt content="Initial notes"
 
 # 2. Read the file
-uv run fastmcp call src/mcp_server_demo/server.py read_file path=notes.txt
+uv run fastmcp call src/file_manager/server.py read_file path=notes.txt
 
 # 3. Write / Append to the file
-uv run fastmcp call src/mcp_server_demo/server.py write_file path=notes.txt content="\nAdded line 2" mode=append
+uv run fastmcp call src/file_manager/server.py write_file path=notes.txt content="\nAdded line 2" mode=append
 
 # 4. Write / Edit by search-and-replace
-uv run fastmcp call src/mcp_server_demo/server.py write_file path=notes.txt mode=replace target_text="Added line 2" replacement_text="Edited line 2"
+uv run fastmcp call src/file_manager/server.py write_file path=notes.txt mode=replace target_text="Added line 2" replacement_text="Edited line 2"
 
 # 5. Delete the file
-uv run fastmcp call src/mcp_server_demo/server.py delete_file path=notes.txt
+uv run fastmcp call src/file_manager/server.py delete_file path=notes.txt
 ```
 
 ### Method 6: Interactive MCP Inspector Web UI
 To test tools interactively with a graphical web UI:
 ```bash
-uv run fastmcp dev inspector src/mcp_server_demo/server.py
+uv run fastmcp dev inspector src/file_manager/server.py
 ```
 This opens the MCP Inspector interface in your browser, where you can inspect capabilities, select tools, provide arguments, and view real-time JSON-RPC request/response payloads.
 
@@ -199,8 +199,8 @@ Add the server to your Claude Desktop configuration file:
       "args": [
         "run",
         "--directory",
-        "/absolute/path/to/mcp-server-demo",
-        "mcp-server-demo"
+        "/absolute/path/to/file-management-mcp-server",
+        "file-management-mcp-server"
       ]
     }
   }
@@ -218,7 +218,7 @@ In your workspace configuration (e.g., `.cursor/mcp.json`):
         "run",
         "--directory",
         "${workspaceFolder}",
-        "mcp-server-demo"
+        "file-management-mcp-server"
       ]
     }
   }
@@ -238,7 +238,7 @@ You can customize file resolution and sandbox security using environment variabl
 
 Example running with strict sandboxing:
 ```bash
-MCP_ENFORCE_SANDBOX=true MCP_WORKSPACE_DIR=/path/to/safe_folder uv run mcp-server-demo
+MCP_ENFORCE_SANDBOX=true MCP_WORKSPACE_DIR=/path/to/safe_folder uv run file-management-mcp-server
 ```
 
 ---
