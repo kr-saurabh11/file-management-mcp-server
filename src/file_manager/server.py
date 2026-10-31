@@ -10,7 +10,7 @@ main runtime entrypoint for standard I/O (stdio) transport.
 from typing import Any
 from fastmcp import FastMCP
 
-from mcp_server_demo.tools.file_operations import (
+from file_manager.tools.file_operations import (
     create_file as _create_file,
     delete_file as _delete_file,
     read_file as _read_file,

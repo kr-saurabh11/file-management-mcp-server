@@ -9,7 +9,7 @@ and optional sandbox boundary validation.
 from pathlib import Path
 from typing import Literal
 
-from mcp_server_demo.config import resolve_path
+from file_manager.config import resolve_path
 
 
 def create_file(
