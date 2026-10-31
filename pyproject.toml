@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-server-demo"
+name = "file-management-mcp-server"
 version = "0.1.0"
 description = "FastMCP File Management Server providing standard file operations"
 readme = "README.md"
@@ -14,13 +14,16 @@ dependencies = [
 ]
 
 [project.scripts]
-mcp-server-demo = "mcp_server_demo.server:main"
+file-management-mcp-server = "file_manager.server:main"
 
 [dependency-groups]
 dev = [
     "pytest>=9.2.0",
     "pytest-asyncio>=1.4.1",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/file_manager"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]

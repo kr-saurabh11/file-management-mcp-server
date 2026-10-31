@@ -1,11 +1,11 @@
 """CLI module entrypoint for FastMCP File Management Server.
 
 Enables running the server directly via Python's module invocation flag:
-    $ python -m mcp_server_demo
-    $ uv run python -m mcp_server_demo
+    $ python -m file_manager
+    $ uv run python -m file_manager
 """
 
-from mcp_server_demo.server import main
+from file_manager.server import main
 
 if __name__ == "__main__":
     main()
