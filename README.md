@@ -14,17 +14,18 @@ file-management-mcp-server/
 │   └── file_manager/
 │       ├── __init__.py               # Package exports & version
 │       ├── __main__.py               # Support for `python -m file_manager`
-│       ├── config.py                 # Workspace path & sandbox security resolution
-│       ├── server.py                 # FastMCP server instance & tool registration
+│       ├── config.py                 # Workspace path, sandbox security & server config
+│       ├── server.py                 # FastMCP server instance, tool registration & entrypoints
 │       └── tools/
 │           ├── __init__.py           # Re-exports file tools
 │           └── file_operations.py    # Core logic for create, read, delete, write
 ├── tests/
 │   ├── __init__.py                   # Test suite package
 │   ├── conftest.py                   # Pytest fixtures
-│   └── test_server.py                # 25 unit, integration, and MCP protocol tests
+│   └── test_server.py                # 31 unit, integration, transport and MCP protocol tests
 ├── .gitignore                        # Comprehensive ignore rules for Python, IDEs, and OS
 ├── .python-version                   # Python version pin (3.12)
+├── mcp_server.json                   # MCP client configuration (stdio & streamable-http)
 ├── pyproject.toml                    # Project configuration, build backend, and CLI script
 └── README.md                         # Project documentation
 ```
@@ -35,7 +36,7 @@ file-management-mcp-server/
 
 This server strictly adheres to the **Model Context Protocol (MCP)** standard:
 - **Standard Tool Definitions**: Exposes clean JSON Schemas with typed parameters, clear descriptions, and required parameter validations.
-- **Transport**: Supports standard I/O (`stdio`) transport for seamless integration with MCP client hosts.
+- **Transport**: Supports both **standard I/O (`stdio`)** and **Streamable HTTP (`streamable-http`)** transports for flexible integration with any MCP client host.
 - **Robust Error Handling**: Encapsulates file system exceptions into standard MCP protocol errors (`isError: true` with human-readable error messages).
 - **Workspace & Sandbox Controls**: Supports relative path resolution against a configurable workspace directory and optional sandbox enforcement to prevent unauthorized directory traversal.
 
@@ -124,24 +125,52 @@ pip install pytest pytest-asyncio
 
 ## How to Run Locally
 
-You can run, inspect, and test the server locally using several convenient methods:
+You can run, inspect, and test the server locally using several convenient methods.
+
+The server defaults to **`stdio`** transport. You can switch to **Streamable HTTP** (bound to `localhost:9001`) using CLI flags or environment variables.
 
 ### Method 1: Package CLI Command
-Run the registered console script via `uv`:
+
+Run via `stdio` (default):
 ```bash
 uv run file-management-mcp-server
+```
+
+Run via **Streamable HTTP** on `localhost:9001`:
+```bash
+uv run file-management-mcp-server --streamable-http
+```
+
+Use explicit transport flag:
+```bash
+uv run file-management-mcp-server --transport streamable-http
+uv run file-management-mcp-server --transport stdio
+```
+
+Override host and port for HTTP transport:
+```bash
+uv run file-management-mcp-server --streamable-http --host 0.0.0.0 --port 9001
 ```
 
 ### Method 2: Python Module Invocation
 Run directly using Python's module flag:
 ```bash
+# stdio (default)
 uv run python -m file_manager
+
+# streamable-http
+uv run python -m file_manager --streamable-http
+uv run python -m file_manager --transport streamable-http --host localhost --port 9001
 ```
 
 ### Method 3: FastMCP CLI
 Run the server using the `fastmcp` command-line runner:
 ```bash
+# stdio
 uv run fastmcp run src/file_manager/server.py
+
+# streamable-http
+uv run fastmcp run src/file_manager/server.py --transport streamable-http --host localhost --port 9001
 ```
 
 ### Method 4: Inspect Tool Schemas
@@ -185,12 +214,46 @@ This opens the MCP Inspector interface in your browser, where you can inspect ca
 
 ## Configuring with MCP Clients
 
+The repository includes a ready-made [`mcp_server.json`](mcp_server.json) you can copy or reference:
+
+```json
+ {
+      "mcpServers": {
+        "my-file-manager-mcp-server-streamable-http": {
+      "type": "streamable-http",
+      "url": "http://localhost:9001/mcp"
+    },
+        "my-file-manager-mcp-server-stdio": {
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/Users/pirates11/git-code/file-management-mcp-server",
+            "python",
+            "server.py"
+          ]
+        }
+      }
+ }
+```
+
+> [!IMPORTANT]
+> Before using the **streamable-http** entry, start the server first:
+> ```bash
+> uv run file-management-mcp-server --streamable-http
+> ```
+> The server will listen on `http://localhost:9001/mcp`.
+
+---
+
 ### Claude Desktop
+
 Add the server to your Claude Desktop configuration file:
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
+**Option A — stdio (process-based, no server pre-start required):**
 ```json
 {
   "mcpServers": {
@@ -200,15 +263,34 @@ Add the server to your Claude Desktop configuration file:
         "run",
         "--directory",
         "/absolute/path/to/file-management-mcp-server",
-        "file-management-mcp-server"
+        "file-management-mcp-server",
+        "--transport",
+        "stdio"
       ]
     }
   }
 }
 ```
 
+**Option B — Streamable HTTP (start server separately first):**
+```json
+{
+  "mcpServers": {
+    "file-manager": {
+      "type": "streamable-http",
+      "url": "http://localhost:9001/mcp"
+    }
+  }
+}
+```
+
+---
+
 ### Antigravity / Cursor / Other MCP Clients
+
 In your workspace configuration (e.g., `.cursor/mcp.json`):
+
+**Option A — stdio:**
 ```json
 {
   "mcpServers": {
@@ -218,8 +300,22 @@ In your workspace configuration (e.g., `.cursor/mcp.json`):
         "run",
         "--directory",
         "${workspaceFolder}",
-        "file-management-mcp-server"
+        "file-management-mcp-server",
+        "--transport",
+        "stdio"
       ]
+    }
+  }
+}
+```
+
+**Option B — Streamable HTTP (start server separately first):**
+```json
+{
+  "mcpServers": {
+    "file-manager": {
+      "type": "streamable-http",
+      "url": "http://localhost:9001/mcp"
     }
   }
 }
@@ -229,26 +325,34 @@ In your workspace configuration (e.g., `.cursor/mcp.json`):
 
 ## Environment Variables & Sandboxing
 
-You can customize file resolution and sandbox security using environment variables:
+You can customize file resolution, sandbox security, and server transport settings using environment variables:
 
 | Variable | Default | Description |
 |---|---|---|
 | `MCP_WORKSPACE_DIR` | Current working directory (`pwd`) | Root directory used to resolve relative paths. |
 | `MCP_ENFORCE_SANDBOX` | `false` | When set to `true`, strictly blocks any operations targeting paths outside `MCP_WORKSPACE_DIR` with a `PermissionError`. |
+| `MCP_TRANSPORT` | `stdio` | Transport protocol: `stdio` or `streamable-http`. Also accepted as `FASTMCP_TRANSPORT`. |
+| `MCP_HOST` | `localhost` | Host address for the streamable-http server. Also accepted as `FASTMCP_HOST`. |
+| `MCP_PORT` | `9001` | Port for the streamable-http server. Also accepted as `FASTMCP_PORT`. |
 
-Example running with strict sandboxing:
+Example running with strict sandboxing over stdio:
 ```bash
 MCP_ENFORCE_SANDBOX=true MCP_WORKSPACE_DIR=/path/to/safe_folder uv run file-management-mcp-server
+```
+
+Example running as streamable-http via environment variable:
+```bash
+MCP_TRANSPORT=streamable-http MCP_HOST=localhost MCP_PORT=9001 uv run file-management-mcp-server
 ```
 
 ---
 
 ## Running the Automated Test Suite
 
-The project includes an end-to-end test suite covering all tools, parameter validations, edge cases, MCP protocol calls, and sandboxing:
+The project includes an end-to-end test suite covering all tools, parameter validations, edge cases, MCP protocol calls, transport configuration, and sandboxing:
 
 ```bash
 uv run pytest -v
 ```
 
-All 25 tests verify compliance with file creation, reading with offsets/limits, deletion with safety checks, writing with overwrite/append/replace, and MCP tool dispatching.
+All 31 tests verify compliance with file creation, reading with offsets/limits, deletion with safety checks, writing with overwrite/append/replace, MCP tool dispatching, transport configuration, and CLI argument parsing.
