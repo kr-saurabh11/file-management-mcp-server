@@ -13,10 +13,15 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 from file_manager import (
+    SERVER_HOST,
+    SERVER_PORT,
+    SERVER_TRANSPORT,
     create_file,
     delete_file,
+    main,
     mcp,
     read_file,
+    run,
     write_file,
 )
 
@@ -335,3 +340,108 @@ def test_sandbox_security(test_dir: Path, monkeypatch):
     outside_file = outside_dir / "forbidden.txt"
     with pytest.raises(PermissionError, match="Access denied"):
         create_file(str(outside_file), content="forbidden")
+
+
+# ==============================================================================
+# 7. Transport & Network Configuration tests
+# ==============================================================================
+
+
+def test_server_configuration_defaults():
+    """Verify default server configuration: stdio transport, localhost, and port 9001."""
+    assert SERVER_TRANSPORT == "stdio"
+    assert SERVER_HOST == "localhost"
+    assert SERVER_PORT == 9001
+
+
+def test_server_run_stdio_mode(monkeypatch):
+    """Verify run() dispatches to mcp.run with transport='stdio' by default."""
+    called_args = {}
+
+    def mock_mcp_run(**kwargs):
+        called_args.update(kwargs)
+
+    monkeypatch.setattr(mcp, "run", mock_mcp_run)
+
+    run()
+    assert called_args == {"transport": "stdio"}
+
+    called_args.clear()
+    run(transport="stdio")
+    assert called_args == {"transport": "stdio"}
+
+
+def test_server_run_streamable_http_mode(monkeypatch):
+    """Verify run() dispatches to mcp.run with streamable-http, localhost, and port 9001."""
+    called_args = {}
+
+    def mock_mcp_run(**kwargs):
+        called_args.update(kwargs)
+
+    monkeypatch.setattr(mcp, "run", mock_mcp_run)
+
+    run(transport="streamable-http")
+    assert called_args == {
+        "transport": "streamable-http",
+        "host": "localhost",
+        "port": 9001,
+    }
+
+
+def test_server_run_streamable_http_custom_host_port(monkeypatch):
+    """Verify run() supports overriding host and port for streamable-http transport."""
+    called_args = {}
+
+    def mock_mcp_run(**kwargs):
+        called_args.update(kwargs)
+
+    monkeypatch.setattr(mcp, "run", mock_mcp_run)
+
+    run(transport="streamable-http", host="0.0.0.0", port=9090)
+    assert called_args == {
+        "transport": "streamable-http",
+        "host": "0.0.0.0",
+        "port": 9090,
+    }
+
+
+def test_server_run_invalid_transport():
+    """Verify run() rejects unsupported transport protocols."""
+    with pytest.raises(ValueError, match="Unsupported transport 'websocket'"):
+        run(transport="websocket")
+
+
+def test_server_main_cli_arguments(monkeypatch):
+    """Verify main() parses CLI arguments for streamable-http transport, host, and port."""
+    captured = {}
+
+    def mock_run(transport=None, host=None, port=None, **kwargs):
+        captured["transport"] = transport
+        captured["host"] = host
+        captured["port"] = port
+
+    monkeypatch.setattr("file_manager.server.run", mock_run)
+
+    # 1. Test --streamable-http shortcut
+    main(["--streamable-http"])
+    assert captured == {
+        "transport": "streamable-http",
+        "host": None,
+        "port": None,
+    }
+
+    # 2. Test explicit --transport, --host, and --port
+    main(["--transport", "streamable-http", "--host", "127.0.0.1", "--port", "9050"])
+    assert captured == {
+        "transport": "streamable-http",
+        "host": "127.0.0.1",
+        "port": 9050,
+    }
+
+    # 3. Test --stdio flag
+    main(["--stdio"])
+    assert captured == {
+        "transport": "stdio",
+        "host": None,
+        "port": None,
+    }

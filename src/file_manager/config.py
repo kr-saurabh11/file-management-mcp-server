@@ -1,7 +1,7 @@
 """Configuration and path resolution for FastMCP File Management Server.
 
 This module manages workspace environment settings, path canonicalization,
-and sandbox security boundaries for file operations.
+sandbox security boundaries for file operations, and server runtime configurations.
 """
 
 import os
@@ -18,6 +18,30 @@ ENFORCE_SANDBOX: bool = os.getenv("MCP_ENFORCE_SANDBOX", "false").lower() in (
     "1",
     "yes",
 )
+
+# Server transport protocol configuration: "stdio" or "streamable-http".
+# Defaults to "stdio", overridable via MCP_TRANSPORT or FASTMCP_TRANSPORT.
+SERVER_TRANSPORT: str = os.getenv(
+    "MCP_TRANSPORT", os.getenv("FASTMCP_TRANSPORT", "stdio")
+).lower()
+
+# Server host configuration for streamable-http transport.
+# Defaults to "localhost", overridable via MCP_HOST or FASTMCP_HOST.
+SERVER_HOST: str = os.getenv("MCP_HOST", os.getenv("FASTMCP_HOST", "localhost"))
+
+
+def _get_server_port() -> int:
+    """Parse and return the server port from environment variables, defaulting to 9001."""
+    raw = os.getenv("MCP_PORT", os.getenv("FASTMCP_PORT", "9001"))
+    try:
+        return int(raw)
+    except ValueError:
+        return 9001
+
+
+# Server port configuration for streamable-http transport.
+# Defaults to 9001, overridable via MCP_PORT or FASTMCP_PORT.
+SERVER_PORT: int = _get_server_port()
 
 
 def resolve_path(
