@@ -228,7 +228,7 @@ The repository includes a ready-made [`mcp_server.json`](mcp_server.json) you ca
           "args": [
             "run",
             "--directory",
-            "/Users/pirates11/git-code/file-management-mcp-server",
+            "/absolute/path/to/file-management-mcp-server",
             "python",
             "server.py"
           ]
