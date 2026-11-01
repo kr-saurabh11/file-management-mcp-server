@@ -11,13 +11,21 @@ server offering secure and flexible file management operations:
 - `main`: Entrypoint to launch the server over standard I/O (stdio).
 """
 
-from file_manager.config import ENFORCE_SANDBOX, WORKSPACE_DIR, resolve_path
+from file_manager.config import (
+    ENFORCE_SANDBOX,
+    SERVER_HOST,
+    SERVER_PORT,
+    SERVER_TRANSPORT,
+    WORKSPACE_DIR,
+    resolve_path,
+)
 from file_manager.server import (
     create_file,
     delete_file,
     main,
     mcp,
     read_file,
+    run,
     write_file,
 )
 
@@ -25,6 +33,9 @@ __version__ = "0.1.0"
 
 __all__ = [
     "ENFORCE_SANDBOX",
+    "SERVER_HOST",
+    "SERVER_PORT",
+    "SERVER_TRANSPORT",
     "WORKSPACE_DIR",
     "__version__",
     "create_file",
@@ -33,5 +44,6 @@ __all__ = [
     "mcp",
     "read_file",
     "resolve_path",
+    "run",
     "write_file",
 ]
